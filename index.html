@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b0d12">
+<title>AFCHAT V2</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0d12;--panel:#121620;--panel2:#191f2b;--line:#2a3242;--text:#edf1f8;--muted:#9aa6ba;--accent:#7c9cff;--accent2:#a5b8ff;--danger:#ff8989;--ok:#8ee0b1}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#151c2b 0%,var(--bg) 48%);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}
+button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:12px;padding:10px 14px}button:hover:not(:disabled){border-color:var(--accent)}button:disabled{opacity:.45;cursor:not-allowed}
+.app{max-width:980px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding:18px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 18px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}.logo{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#5e7cf4,#9d76ff);font-weight:900;color:#fff;font-size:20px}.brand h1{font-size:18px;margin:0;letter-spacing:.04em}.brand p{font-size:12px;color:var(--muted);margin:2px 0 0}.head-actions{display:flex;gap:8px}
+.statusbar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.status{border:1px solid var(--line);background:#10141d;border-radius:12px;padding:10px 12px;min-width:0}.status strong{display:block;font-size:12px;color:var(--muted);font-weight:600}.status span{display:block;overflow-wrap:anywhere;font-size:13px;margin-top:3px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#e0b66e;margin-right:6px}.dot.ok{background:var(--ok)}.dot.bad{background:var(--danger)}
+#messages{flex:1;min-height:300px;display:flex;flex-direction:column;gap:14px;padding:18px 0}.welcome{margin:auto;text-align:center;max-width:520px;padding:36px 10px}.welcome .spark{font-size:38px;color:var(--accent2)}.welcome h2{font-size:27px;margin:8px 0}.welcome p{color:var(--muted);margin:8px auto}.suggestions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:18px}.suggestions button{font-size:13px}
+.msg{max-width:85%;border:1px solid var(--line);border-radius:16px;padding:13px 15px;white-space:pre-wrap;overflow-wrap:anywhere}.msg.user{align-self:flex-end;background:#202943;border-color:#35466d}.msg.assistant{align-self:flex-start;background:var(--panel)}.msg .who{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--accent2);margin-bottom:5px}.msg img{display:block;max-width:min(100%,360px);max-height:260px;object-fit:contain;border-radius:10px;margin-top:9px}.msg .caption{font-size:12px;color:var(--muted);margin-top:8px}
+.composer{border:1px solid var(--line);background:rgba(18,22,32,.96);border-radius:18px;padding:10px;position:sticky;bottom:8px;box-shadow:0 10px 40px #0004}.attach-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.attach-row small{color:var(--muted)}.previews{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.preview{position:relative}.preview img{width:66px;height:66px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}.preview button{position:absolute;right:-5px;top:-5px;padding:0;width:22px;height:22px;border-radius:50%;background:#353c4d}
+textarea{width:100%;resize:vertical;min-height:54px;max-height:180px;background:transparent;border:0;color:var(--text);outline:none;padding:8px}.compose-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px}.compose-bottom small{color:var(--muted);font-size:11px}.primary{background:var(--accent);border-color:var(--accent);color:#0b1020;font-weight:800}.settings{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.settings label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}.settings select{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:6px}
+footer{font-size:11px;color:var(--muted);text-align:center;padding:14px 0 4px}.hidden{display:none!important}.error{color:var(--danger)}.good{color:var(--ok)}
+@media(max-width:600px){.app{padding:12px}.statusbar{grid-template-columns:1fr}.msg{max-width:95%}.brand p{max-width:190px}.head-actions button{padding:8px}.welcome h2{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand"><div class="logo">A</div><div><h1>AFCHAT V2</h1><p>IA local · sem API paga · português europeu</p></div></div>
+  <div class="head-actions"><button id="newChat" title="Nova conversa">＋ Nova</button></div>
+</header>
+<section class="statusbar">
+  <div class="status"><strong>MODELO DE TEXTO</strong><span id="textStatus"><i class="dot"></i>Não carregado</span><button id="loadText" style="margin-top:8px;width:100%">Carregar chat</button></div>
+  <div class="status"><strong>MODELO DE IMAGEM</strong><span id="visionStatus"><i class="dot"></i>Não carregado</span><button id="loadVision" style="margin-top:8px;width:100%">Carregar visão</button></div>
+</section>
+<main id="messages" aria-live="polite">
+  <div class="welcome" id="welcome"><div class="spark">✦</div><h2>Boas, Afonso.</h2><p>AFCHAT V2 começa limpo: o chat e a visão carregam separadamente. Se a visão falhar, o chat não deve deixar de funcionar.</p><div class="suggestions"><button data-prompt="Boas, tudo bem?">Boas 👋</button><button data-prompt="Explica-me o que significa 'tf' e 'wallah' no contexto da internet.">Explica gíria</button><button data-prompt="Dá-me uma ideia criativa para hoje.">Dá-me uma ideia</button></div></div>
+</main>
+<section class="composer">
+  <div class="attach-row"><button id="pickImage">＋ Imagem</button><input id="imageInput" type="file" accept="image/*" multiple class="hidden"><small id="imageHint">A análise visual é opcional e precisa de carregar o modelo de visão.</small></div>
+  <div id="previews" class="previews"></div>
+  <textarea id="prompt" placeholder="Escreve uma mensagem… (Enter envia, Shift+Enter nova linha)" rows="2"></textarea>
+  <div class="compose-bottom"><small id="workingStatus">Carrega o modelo de texto para começar.</small><button id="send" class="primary">Enviar ↗</button></div>
+  <div class="settings"><label>Estilo <select id="style"><option value="natural">Natural / casual</option><option value="formal">Formal</option><option value="meme">Meme mode</option></select></label><label>Resposta <select id="length"><option value="short">Curta</option><option value="normal" selected>Normal</option><option value="long">Detalhada</option></select></label></div>
+</section>
+<footer>Os modelos são descarregados de fontes públicas no primeiro uso. Sem custo por mensagem; requer internet inicial, espaço em disco e recursos do dispositivo.</footer>
+</div>
+<script type="module">
+const $ = id => document.getElementById(id);
+const state = { textPipe:null, visionPipe:null, textLoading:null, visionLoading:null, images:[], busy:false, history:[] };
+const TEXT_MODEL = 'onnx-community/Qwen2.5-0.5B-Instruct';
+const VISION_MODEL = 'Xenova/vit-gpt2-image-captioning';
+const CDN = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.2';
+let transformersPromise = null;
+function getTransformers(){
+  if(!transformersPromise) transformersPromise = import(CDN).catch(err=>{transformersPromise=null;throw new Error('Não consegui descarregar a biblioteca Transformers.js. Confirma a ligação à internet e tenta novamente. Detalhe: '+(err?.message||String(err)))});
+  return transformersPromise;
+}
+function setStatus(which, text, kind=''){
+  const el=$(which); el.innerHTML='';
+  const dot=document.createElement('i'); dot.className='dot'+(kind?' '+kind:'');
+  el.append(dot,document.createTextNode(text));
+}
+function setWorking(text, isError=false){$('workingStatus').textContent=text;$('workingStatus').className=isError?'error':''}
+function addMessage(role,text,images=[],caption=''){
+  $('welcome')?.remove();
+  const box=document.createElement('article'); box.className='msg '+role;
+  if(role==='assistant'){const who=document.createElement('div');who.className='who';who.textContent='AFCHAT V2';box.appendChild(who)}
+  const body=document.createElement('div');body.textContent=text;box.appendChild(body);
+  images.forEach(src=>{const img=document.createElement('img');img.src=src;img.alt='Imagem enviada';box.appendChild(img)});
+  if(caption){const c=document.createElement('div');c.className='caption';c.textContent='Descrição visual: '+caption;box.appendChild(c)}
+  $('messages').appendChild(box);box.scrollIntoView({block:'nearest',behavior:'smooth'});return box;
+}
+function saveHistory(){try{localStorage.setItem('afchatv2_history',JSON.stringify(state.history.slice(-40).map(m=>({role:m.role,text:m.text,caption:m.caption||''}))))}catch{}}
+function safeErr(err){
+  if(err===null||err===undefined)return 'Erro sem detalhes fornecidos pelo browser.';
+  const parts=[err.name,err.message,err.cause?.message].filter(v=>v!==undefined&&v!==null&&String(v).trim()!=='');
+  const msg=parts.join(': ');
+  return msg || (typeof err==='object' ? JSON.stringify(err) : String(err));
+}
+async function createPipeline(task, model, statusId){
+  const {pipeline}=await getTransformers();
+  const attempts=[];
+  // Try accelerated mode first, then WASM. Each feature has its own pipeline and state.
+  for(const device of ['webgpu','wasm']){
+    try{
+      setStatus(statusId,device==='webgpu'?'A iniciar com WebGPU…':'A tentar modo CPU (WASM)…');
+      const dtype = device === 'webgpu' ? 'q4f16' : 'q4';
+      const pipe=await pipeline(task,model,{device,dtype,progress_callback:p=>{
+        if(p?.status==='progress'&&Number.isFinite(p.progress))setStatus(statusId,`A descarregar modelo (${Math.round(p.progress)}%)…`);
+        else if(p?.status==='downloading')setStatus(statusId,'A descarregar modelo…');
+      }});
+      setStatus(statusId,`Pronto (${device==='webgpu'?'GPU':'CPU'})`,'ok');
+      return pipe;
+    }catch(err){
+      attempts.push(device+': '+safeErr(err));
+      console.warn('AFCHAT pipeline failed',task,model,device,err);
+    }
+  }
+  const details=attempts.join(' | ');
+  const hint = /3999415816|0xee623e08/.test(details)
+    ? ' O código numérico pode indicar falha de alocação/memória do motor ONNX. Fecha separadores pesados, reinicia o browser e tenta novamente; se continuar, este dispositivo pode não conseguir carregar este modelo.'
+    : '';
+  throw new Error('Não foi possível carregar '+model+'. '+details+hint);
+}
+async function loadText(){
+  if(state.textPipe)return state.textPipe;if(state.textLoading)return state.textLoading;
+  $('loadText').disabled=true;setWorking('A carregar o modelo de texto…');
+  state.textLoading=(async()=>{try{state.textPipe=await createPipeline('text-generation',TEXT_MODEL,'textStatus');setWorking('Chat pronto. Escreve uma mensagem.');return state.textPipe}catch(err){setStatus('textStatus','Falhou','bad');setWorking(safeErr(err),true);addMessage('assistant','Não consegui carregar o modelo de texto.\n'+safeErr(err));throw err}finally{$('loadText').disabled=false;state.textLoading=null}})();
+  return state.textLoading;
+}
+async function loadVision(){
+  if(state.visionPipe)return state.visionPipe;if(state.visionLoading)return state.visionLoading;
+  $('loadVision').disabled=true;$('imageHint').textContent='A carregar o modelo visual…';
+  state.visionLoading=(async()=>{try{state.visionPipe=await createPipeline('image-to-text',VISION_MODEL,'visionStatus');$('imageHint').textContent='Visão pronta. Escolhe uma imagem para a analisar.';return state.visionPipe}catch(err){setStatus('visionStatus','Falhou','bad');$('imageHint').textContent='Visão indisponível: '+safeErr(err);addMessage('assistant','A parte visual falhou, mas o chat de texto pode continuar a funcionar.\n'+safeErr(err));throw err}finally{$('loadVision').disabled=false;state.visionLoading=null}})();
+  return state.visionLoading;
+}
+function readFile(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=()=>reject(new Error('Não consegui ler esse ficheiro de imagem.'));r.readAsDataURL(file)})}
+function renderPreviews(){
+  const root=$('previews');root.innerHTML='';
+  state.images.forEach((img,index)=>{const d=document.createElement('div');d.className='preview';const el=document.createElement('img');el.src=img.data;el.alt=img.name;const b=document.createElement('button');b.textContent='×';b.title='Remover imagem';b.onclick=()=>{state.images.splice(index,1);renderPreviews()};d.append(el,b);root.appendChild(d)});
+}
+$('pickImage').addEventListener('click',()=>$('imageInput').click());
+$('imageInput').addEventListener('change',async e=>{
+  for(const file of [...e.target.files]){
+    if(!file.type.startsWith('image/'))continue;
+    if(file.size>5*1024*1024){setWorking('A imagem '+file.name+' tem mais de 5 MB. Escolhe uma imagem mais pequena.',true);continue}
+    try{state.images.push({name:file.name,data:await readFile(file)});}catch(err){setWorking(safeErr(err),true)}
+  }
+  renderPreviews();e.target.value='';
+});
+$('loadText').addEventListener('click',()=>loadText().catch(()=>{}));
+$('loadVision').addEventListener('click',()=>loadVision().catch(()=>{}));
+function systemPrompt(){
+  const style=$('style').value;
+  let tone=style==='formal'?'Usa português europeu formal, claro e rigoroso.':style==='meme'?'Usa português europeu casual, percebe memes e brinca quando encaixa, sem forçar piadas.':'Usa português europeu natural, casual e direto. Soa a alguém online, não a um chatbot corporativo.';
+  return `És AFCHAT V2, um assistente conversacional útil. ${tone}
+Percebe gíria de internet pelo contexto: “tf”/“wtf” (surpresa ou “que raio”), “wallah/wallahi” (ênfase tipo “juro”), “bro/bruh”, “fr” (for real), “ngl” (not gonna lie), “lowkey”, “cooked”, “aura”, “W/L”, “based”, “cringe”, “zesty” e emojis como 😭💀. “nigga” pode ser usado como vocativo ou gíria em certos contextos; interpreta o contexto sem o repetir desnecessariamente. Não expliques gíria a menos que perguntem. Não inventes factos; se não souberes, diz. Responde em português europeu, salvo se pedirem outra língua.`;
+}
+function makeMessages(userText,caption){
+  const imageContext=caption?'\nDescrição produzida pelo modelo visual (pode conter erros): '+caption:'';
+  const messages=[{role:'system',content:systemPrompt()}];
+  // Use the actual chat-message format so Qwen applies its own chat template.
+  for(const m of state.history.slice(-8)){
+    if(m.role==='user') messages.push({role:'user',content:m.text+(m.caption?'\nDescrição visual anterior: '+m.caption:'')});
+    else if(m.role==='assistant') messages.push({role:'assistant',content:m.text});
+  }
+  messages.push({role:'user',content:(userText||'Descreve a imagem anexada.')+imageContext});
+  return {messages,max_new_tokens:$('length').value==='short'?96:$('length').value==='long'?240:160};
+}
+async function generateText(userText,caption){
+  const pipe=await loadText();
+  const args=makeMessages(userText,caption);
+  // Qwen2.5-Instruct expects a chat-template input, not a hand-written "AFCHAT V2:" string.
+  const out=await pipe(args.messages,{max_new_tokens:args.max_new_tokens,do_sample:false,return_full_text:false});
+  const item=Array.isArray(out)?out[0]:out;
+  let answer='';
+  const generated=item?.generated_text;
+  if(typeof generated==='string') answer=generated;
+  else if(Array.isArray(generated)){
+    const lastAssistant=[...generated].reverse().find(m=>m?.role==='assistant');
+    answer=typeof lastAssistant?.content==='string'?lastAssistant.content:'';
+  } else if(typeof item?.text==='string') answer=item.text;
+  if(typeof answer!=='string'||!answer.trim()) throw new Error('O modelo não devolveu uma resposta legível. Formato recebido: '+JSON.stringify(item).slice(0,600));
+  answer=answer.trim();
+  // Some runtimes return the whole transcript even when return_full_text is false.
+  const marker=answer.lastIndexOf('AFCHAT V2:');
+  if(marker>=0) answer=answer.slice(marker+'AFCHAT V2:'.length).trim();
+  return answer;
+}
+async function describeImages(images){
+  const pipe=await loadVision();
+  const captions=[];
+  for(const im of images){
+    const out=await pipe(im.data);
+    const item=Array.isArray(out)?out[0]:out;
+    const caption=item?.generated_text||item?.text;
+    if(!caption)throw new Error('O modelo visual não devolveu uma descrição legível.');
+    captions.push(caption);
+  }
+  return captions.join(' | ');
+}
+async function send(){
+  if(state.busy)return;
+  const userText=$('prompt').value.trim();
+  const images=[...state.images];
+  if(!userText&&!images.length)return;
+  state.busy=true;$('send').disabled=true;
+  const sources=images.map(x=>x.data);
+  addMessage('user',userText||'Analisa esta imagem, por favor.',sources);
+  $('prompt').value='';state.images=[];renderPreviews();
+  let caption='';
+  try{
+    if(images.length){
+      setWorking('A analisar imagem…');
+      try{caption=await describeImages(images)}catch(err){setWorking('A visão falhou; vou tentar responder só com texto.',true);console.error(err)}
+    }
+    setWorking('A gerar resposta…');
+    const answer=await generateText(userText||'Descreve a imagem anexada.',caption);
+    state.history.push({role:'user',text:userText||'Analisa esta imagem, por favor.',caption});
+    state.history.push({role:'assistant',text:answer});
+    saveHistory();addMessage('assistant',answer,[],caption);
+    setWorking('Pronto.');
+  }catch(err){
+    const message=safeErr(err);console.error(err);
+    addMessage('assistant','Não consegui responder desta vez.\n'+message);
+    setWorking(message,true);
+  }finally{state.busy=false;$('send').disabled=false}
+}
+$('send').addEventListener('click',send);
+$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+document.querySelectorAll('[data-prompt]').forEach(b=>b.addEventListener('click',()=>{$('prompt').value=b.dataset.prompt;$('prompt').focus()}));
+$('newChat').addEventListener('click',()=>{state.history=[];try{localStorage.removeItem('afchatv2_history')}catch{};$('messages').innerHTML='<div class="welcome" id="welcome"><div class="spark">✦</div><h2>Nova conversa</h2><p>Os modelos carregados continuam disponíveis.</p></div>';setWorking('Nova conversa iniciada.')});
+try{
+  const old=JSON.parse(localStorage.getItem('afchatv2_history')||'[]');
+  if(Array.isArray(old)&&old.length){$('welcome')?.remove();state.history=old;old.forEach(m=>addMessage(m.role,m.text,[],m.caption||''))}
+}catch{}
+</script>
+</body>
+</html>
